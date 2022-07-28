@@ -1,5 +1,7 @@
 library(shiny) # shiny features
 library(shinydashboard) # shinydashboard functions
+library(shinycssloaders) # to add a loader while graph is populating
+
 
 dashboardPage(
   dashboardHeader(title = "Exploring the IMDB Dataset of 50K Movie Reviews with R Shiny Dashboard",
@@ -9,27 +11,52 @@ dashboardPage(
                   ),
   dashboardSidebar(
     sidebarMenu(id = "sidebar",
-      menuItem("About", tabName = "about", icon = icon("dashboard")),
-      menuItem("Data Exploration", tabName = "eda", icon=icon("bar-chart-o")),
+      menuItem("About",  tabName = "about", icon = icon("dashboard")),
+      menuItem("Data Exploration", tabName = "eda", icon=icon("bar-chart-o"),
+               conditionalPanel("input.sidebar == 'eda'", checkboxGroupInput(inputId = "data_type" ,
+                                                                             label = "Data Type",
+                                                                             selected = NULL,
+                                                                             c("Raw Review Data" = "raw",
+                                                                               "Singular Vaule Decomposition" = "svd"))),
+                                                          checkboxGroupInput(inputId = "sum_type" ,
+                                                                             label = "Summary Type",
+                                                                             selected = NULL,
+                                                                             c("Numeric Summary" = "num",
+                                                                               "Graphical Summary" = "plot")),
+                                                          numericInput(inputId = "norw",
+                                                                       label = "Select the number of rows",
+                                                                       value = 700,
+                                                                       min  = 500,
+                                                                       max = 700),
+                                                          numericInput(inputId = "norw",
+                                                                       label = "Select the number of rows",
+                                                                       value = 700,
+                                                                       min  = 500,
+                                                                       max = 700)
+                ),
       menuItem("Modeling", tabName = "model", icon = icon("chart-line")),
       menuItem("Dataset", tabName = "data", icon = icon("database"))
     )
   ),
   dashboardBody(
-    #About Tab
+    # About Tab
     tabItems(
       tabItem(tabName = "about",
-              h1("placehoder")
+              fluidPage(includeHTML("About.html"),
+                        br(),
+                        img(src = "IMDB.jpg",
+                            width="500px",
+                            height="520px",
+                            align = "left",
+                            alt = "Test Image")
+                       )
               ),
       
-      
-      tabItem(tabName = "eda",
-              tabBox(id ="t1", width = 12,
-                     tabPanel("Data", dataTableOutput("dataT"), icon = icon("table")), 
-                     tabPanel("Structure", verbatimTextOutput("structure"), icon=icon("uncharted"))
-              )
+      # EDA tab 
+      tabItem(tabName = "eda", h2("hello")
       ),
       
+      # Modeling tab
       tabItem(tabName = "model",
               tabBox(id ="t1", width = 12,
                      tabPanel("Modeling Info", dataTableOutput("dataT"), icon = icon("address-card")), 
@@ -38,6 +65,7 @@ dashboardPage(
               )
       ),
       
+      # Dataset tab
       tabItem(tabName = "data",
               tabBox(id ="t1", width = 12,
                      tabPanel("Data", dataTableOutput("dataT"), icon = icon("table")), 
@@ -57,7 +85,7 @@ dashboardPage(
     #         )
     # )
     )       
-  )
+)
 
 
 

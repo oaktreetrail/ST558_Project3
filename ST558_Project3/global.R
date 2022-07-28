@@ -15,3 +15,144 @@ library(syuzhet)
 library(textdata)
 library(tm)
 library(wordcloud)
+
+# Parallel Processing
+cores <- detectCores()
+cl <- makeCluster(cores, type = "SOCK")
+registerDoSNOW(cl)
+
+################
+# Read In Data # 
+################
+
+# Read in the data set
+review.raw <- read.csv("F:\\Graduate\\NCSU_courses\\ST558\\projects\\project_3\\IMDB Dataset.csv", nrows = 1000, stringsAsFactors = FALSE)
+
+
+
+########################
+# Create the functions #
+########################
+
+
+#The function for calculating relative term frequency (TF)
+term.frequency <- function(row) {
+  row / sum(row)
+}
+
+#The function for calculating inverse document frequency (IDF)
+inverse.doc.freq <- function(col) {
+  corpus.size <- length(col)
+  doc.count <- length(which(col > 0))
+  
+  log10(corpus.size / doc.count)
+}
+
+#Our function for calculating TF-IDF.
+tf.idf <- function(tf, idf) {
+  tf * idf
+}
+
+
+################
+# Prepare Data #
+################
+
+# Add a variable to show the length of reviews.
+review.raw$ReviewLength <- nchar(review.raw$review)
+
+# Convert our sentiment label into a factor 
+review.raw$sentiment <- as.factor(review.raw$sentiment)
+
+# seed for reproducibility.
+set.seed(558)
+
+# Create a 70%/ 30% stratified split
+indexes <- createDataPartition(review.raw$sentiment, times = 1,
+                               p = 0.7, list = FALSE)
+
+train <- review.raw[indexes,]
+test <- review.raw[-indexes,]
+
+pos.indexes <- which(train$sentiment == "positive")
+
+# Tokenize IMDB review: First, I use tokens() function to tokenize all these tests into words per review, by removing digits, punctuation, symbols and hyphens.
+train.tokens <- tokens(train$review, what = "word", 
+                       remove_numbers = TRUE, remove_punct = TRUE,
+                       remove_symbols = TRUE)
+
+#Then, lower case the tokens, using tokens_tolower() function. 
+train.tokens <- tokens_tolower(train.tokens)
+
+#Stop words,such as "the", are common words that are used in language that are typically used to male language flow. But in general, they don't add anything in terms of semantics. Thus, removed. 
+train.tokens <- tokens_select(train.tokens, stopwords(), 
+                              selection = "remove")
+
+# Perform stemming on the tokens using tokens_wordstem() function. Stemming is the way we take words that very similar(run, ran, running) and we collapse them down into essentially a single column in our term frequnecy matrix.  
+train.tokens <- tokens_wordstem(train.tokens, language = "english")
+
+
+# N-grams allow us to augment our document-term frequency matrices with word ordering. This often leads to increased performance (e.g., accuracy) for machine learning models trained with more than just unigrams (i.e., single terms). Let's add bigrams to our training data and the TF-IDF transform the expanded featre matrix to see if accuracy improves.
+
+#Add bigrams to our feature matrix.
+train.tokens <- tokens_ngrams(train.tokens, n = 1:2)
+
+# Create the bag-of-words model by dfm() function (dfm is short for document-feature matrix).
+train.tokens.dfm <- dfm(train.tokens, tolower = FALSE)
+
+# Transform to a matrix and inspect.
+train.tokens.matrix <- as.matrix(train.tokens.dfm)
+
+# # First step, normalize all documents via TF.
+# train.tokens.df <- apply(train.tokens.matrix, 1, term.frequency)
+# 
+# # Second step, calculate the IDF vector that we will use - both
+# train.tokens.idf <- apply(train.tokens.matrix, 2, inverse.doc.freq)
+# 
+# # Lastly, calculate TF-IDF for our training corpus.
+# train.tokens.tfidf <-  apply(train.tokens.df, 2, tf.idf, idf = train.tokens.idf)
+# 
+# # Transpose the matrix
+# train.tokens.tfidf <- t(train.tokens.tfidf)
+# 
+# # Perform SVD. Specifically, reduce dimensionality down to 300 columns for our latent semantic analysis (LSA).
+# train.irlba <- irlba(t(train.tokens.tfidf), nv = 50, maxit = 100)
+# 
+# # Create data frame using our document semantic space of 150 features (i.e., the V matrix from our SVD).
+# train.svd <- data.frame(Label = train$sentiment, train.irlba$v)
+
+
+
+
+#######
+# EDA #
+#######
+
+# First, take a look at distribution of sentiment labels (i.e., positive vs. negative)
+prop_table <- prop.table(table(review.raw$sentiment))
+
+
+# let's get a feel for the distribution of text lengths of the review 
+summary(review.raw$ReviewLength)
+
+# Visualize distribution with ggplot2, adding segmentation for positive/ negative
+ggplot(review.raw, aes(x = ReviewLength, fill = sentiment)) +
+  theme_bw() +
+  geom_histogram(binwidth = 50) +
+  labs(y = "Review Count", x = "Length of Review",
+       title = "Distribution of Review Length with Sentiment Lables")
+
+# WordCloud
+data.frame(colSums(train.tokens.matrix))
+pos_train.tokens.matrix <- train.tokens.matrix[pos.indexes, ]
+neg_train.tokens.matrix <- train.tokens.matrix[-pos.indexes, ]
+
+pos_sums <- as.data.frame(colSums(pos_train.tokens.matrix))
+pos_sums <- rownames_to_column(pos_sums) 
+colnames(pos_sums) <- c("term", "count")
+pos_sums <- arrange(pos_sums, desc(count))
+pos_head <- pos_sums[1:75,]
+
+wordcloud(words = pos_head$term, freq = pos_head$count, scale = c(4, 1),
+          max.words=100, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
