@@ -15,7 +15,10 @@ library(syuzhet)
 library(textdata)
 library(tm)
 library(wordcloud)
+library(xlsx)      
 
+
+set.seed(558)
 # Parallel Processing
 cores <- detectCores()
 cl <- makeCluster(cores, type = "SOCK")
@@ -26,9 +29,8 @@ registerDoSNOW(cl)
 ################
 
 # Read in the data set
-review.raw <- read.csv("F:\\Graduate\\NCSU_courses\\ST558\\projects\\project_3\\IMDB Dataset.csv", nrows = 1000, stringsAsFactors = FALSE)
-
-
+setwd("F:\\Graduate\\NCSU_courses\\ST558\\projects\\project_3\\ST558_Project3\\ST558_Project3")
+review.raw <- read.csv("IMDB Dataset.csv", nrows = 1000, stringsAsFactors = FALSE)
 
 ########################
 # Create the functions #
@@ -115,14 +117,17 @@ train.tokens.matrix <- as.matrix(train.tokens.dfm)
 # # Transpose the matrix
 # train.tokens.tfidf <- t(train.tokens.tfidf)
 # 
-# # Perform SVD. Specifically, reduce dimensionality down to 300 columns for our latent semantic analysis (LSA).
+# # Perform SVD. Specifically, reduce dimensionality down to 50 columns for our latent semantic analysis (LSA).
 # train.irlba <- irlba(t(train.tokens.tfidf), nv = 50, maxit = 100)
 # 
-# # Create data frame using our document semantic space of 150 features (i.e., the V matrix from our SVD).
+# # Create data frame using our document semantic space of 50 features (i.e., the V matrix from our SVD).
 # train.svd <- data.frame(Label = train$sentiment, train.irlba$v)
 
+# Saving train.svd in RData format
+# write.csv(train.svd, file = "svd.csv")
 
-
+# To load the data again
+train.svd <- read.csv("svd.csv")[-1]
 
 #######
 # EDA #
@@ -133,14 +138,14 @@ prop_table <- prop.table(table(review.raw$sentiment))
 
 
 # let's get a feel for the distribution of text lengths of the review 
-summary(review.raw$ReviewLength)
+ReviewLength_table <- as.array(summary(review.raw$ReviewLength))
 
 # Visualize distribution with ggplot2, adding segmentation for positive/ negative
-ggplot(review.raw, aes(x = ReviewLength, fill = sentiment)) +
-  theme_bw() +
-  geom_histogram(binwidth = 50) +
-  labs(y = "Review Count", x = "Length of Review",
-       title = "Distribution of Review Length with Sentiment Lables")
+raw_graphic_sum <- ggplot(review.raw, aes(x = ReviewLength, fill = sentiment)) +
+                     theme_bw() +
+                     geom_histogram(binwidth = 50) +
+                     labs(y = "Review Count", x = "Length of Review",
+                     title = "Distribution of Review Length with Sentiment Lables")
 
 # WordCloud
 data.frame(colSums(train.tokens.matrix))
@@ -153,6 +158,32 @@ colnames(pos_sums) <- c("term", "count")
 pos_sums <- arrange(pos_sums, desc(count))
 pos_head <- pos_sums[1:75,]
 
-wordcloud(words = pos_head$term, freq = pos_head$count, scale = c(4, 1),
-          max.words=100, random.order=FALSE, rot.per=0.35, 
-          colors=brewer.pal(8, "Dark2"))
+# pos_wordCloud <- wordcloud(words = pos_head$term, freq = pos_head$count, scale = c(4, 1),
+#                    max.words=100, random.order=FALSE, rot.per=0.35, 
+#                    colors=brewer.pal(8, "Dark2"))
+
+
+neg_sums <- as.data.frame(colSums(neg_train.tokens.matrix))
+neg_sums <- rownames_to_column(neg_sums) 
+colnames(neg_sums) <- c("term", "count")
+neg_sums <- arrange(neg_sums, desc(count))
+neg_head <- neg_sums[1:75,]
+
+neg_wordCloud <- wordcloud(words = neg_head$term, freq = neg_head$count, scale = c(4, 1),
+                           max.words=100, random.order=FALSE, rot.per=0.35, 
+                           colors=brewer.pal(8, "Dark2"))
+
+
+
+# Use caret to create stratified folds for 10-fold cross validation repeated 3 times (i.e., create 30 random stratified samples)
+cv.folds <- createMultiFolds(train$sentiment, k = 10, times = 3)
+
+cv.cntrl <- trainControl(method = "repeatedcv", number = 10,
+                         repeats = 3, index = cv.folds)
+
+# Single decision trees
+rpart.cv.1 <- train(Label ~ ., data = train.svd, method = "rpart", 
+                    trControl = cv.cntrl, tuneLength = 7)
+
+# Check out our results.
+rpart.cv.1
