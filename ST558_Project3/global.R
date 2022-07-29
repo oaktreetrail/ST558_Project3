@@ -16,7 +16,7 @@ library(textdata)
 library(tm)
 library(wordcloud)
 library(xlsx)      
-
+library(corrplot)
 
 set.seed(558)
 # Parallel Processing
@@ -66,8 +66,6 @@ review.raw$ReviewLength <- nchar(review.raw$review)
 # Convert our sentiment label into a factor 
 review.raw$sentiment <- as.factor(review.raw$sentiment)
 
-# seed for reproducibility.
-set.seed(558)
 
 # Create a 70%/ 30% stratified split
 indexes <- createDataPartition(review.raw$sentiment, times = 1,
@@ -77,6 +75,7 @@ train <- review.raw[indexes,]
 test <- review.raw[-indexes,]
 
 pos.indexes <- which(train$sentiment == "positive")
+neg.indexes <- which(train$sentiment == "negative")
 
 # Tokenize IMDB review: First, I use tokens() function to tokenize all these tests into words per review, by removing digits, punctuation, symbols and hyphens.
 train.tokens <- tokens(train$review, what = "word", 
@@ -148,30 +147,28 @@ raw_graphic_sum <- ggplot(review.raw, aes(x = ReviewLength, fill = sentiment)) +
                      title = "Distribution of Review Length with Sentiment Lables")
 
 # WordCloud
-data.frame(colSums(train.tokens.matrix))
-pos_train.tokens.matrix <- train.tokens.matrix[pos.indexes, ]
-neg_train.tokens.matrix <- train.tokens.matrix[-pos.indexes, ]
-
-pos_sums <- as.data.frame(colSums(pos_train.tokens.matrix))
-pos_sums <- rownames_to_column(pos_sums) 
-colnames(pos_sums) <- c("term", "count")
-pos_sums <- arrange(pos_sums, desc(count))
-pos_head <- pos_sums[1:75,]
+# pos_train.tokens.matrix <- train.tokens.matrix[intersect(pos.indexes, sample(1:1000, input$nrow)), ]
+# 
+# pos_sums <- as.data.frame(colSums(pos_train.tokens.matrix))
+# pos_sums <- rownames_to_column(pos_sums) 
+# colnames(pos_sums) <- c("term", "count")
+# pos_sums <- arrange(pos_sums, desc(count))
+# pos_head <- pos_sums[1:75,]
 
 # pos_wordCloud <- wordcloud(words = pos_head$term, freq = pos_head$count, scale = c(4, 1),
 #                    max.words=100, random.order=FALSE, rot.per=0.35, 
 #                    colors=brewer.pal(8, "Dark2"))
 
+# neg_train.tokens.matrix <- train.tokens.matrix[intersect(neg.indexes, sample(1:1000, input$nrow)), ]
+# neg_sums <- as.data.frame(colSums(neg_train.tokens.matrix))
+# neg_sums <- rownames_to_column(neg_sums) 
+# colnames(neg_sums) <- c("term", "count")
+# neg_sums <- arrange(neg_sums, desc(count))
+# neg_head <- neg_sums[1:75,]
 
-neg_sums <- as.data.frame(colSums(neg_train.tokens.matrix))
-neg_sums <- rownames_to_column(neg_sums) 
-colnames(neg_sums) <- c("term", "count")
-neg_sums <- arrange(neg_sums, desc(count))
-neg_head <- neg_sums[1:75,]
-
-neg_wordCloud <- wordcloud(words = neg_head$term, freq = neg_head$count, scale = c(4, 1),
-                           max.words=100, random.order=FALSE, rot.per=0.35, 
-                           colors=brewer.pal(8, "Dark2"))
+# neg_wordCloud <- wordcloud(words = neg_head$term, freq = neg_head$count, scale = c(4, 1),
+#                            max.words=100, random.order=FALSE, rot.per=0.35, 
+#                            colors=brewer.pal(8, "Dark2"))
 
 
 
