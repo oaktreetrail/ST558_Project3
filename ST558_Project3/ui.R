@@ -160,7 +160,41 @@ dashboardPage(
                                               box(h4(strong("Disadvantages")),
                                                   p("1. Complexity: Random Forest creates a lot of trees (unlike only one tree in case of decision tree) and combines their outputs. By default, it creates 100 trees in Python sklearn library. To do so, this algorithm requires much more computational power and resources. On the other hand decision tree is simple and does not require so much computational resources."),
                                                   p("2. Longer Training Period: Random Forest require much more time to train as compared to decision trees as it generates a lot of trees (instead of one tree in case of decision tree) and makes decision on the majority of votes.")))),
-                           tabPanel("Model Fitting",  icon=icon("uncharted")),
+                           tabPanel("Model Fitting",  icon=icon("uncharted"),
+                                    fluidPage(
+                                      column(4, sliderInput(inputId = "p",
+                                                            label = "Select the Proportion to Split the Data",
+                                                            value = 0.5,
+                                                            min  = 0.5,
+                                                            max = 1,
+                                                            step = 0.1)),
+                                      column(4, sliderInput(inputId = "nvar_model",
+                                                            label = "Number the Varaibles in the Model",
+                                                            value = 10,
+                                                            min  = 10,
+                                                            max = 50,
+                                                            step = 5)),
+                                      column(4, sliderInput(inputId = "cv",
+                                                              label = "Number of CV fold",
+                                                              value = 5,
+                                                              min  = 5,
+                                                              max = 10))
+                                            ),
+                                    
+                                    fluidPage(actionButton("fitmodel", "Start Fitting Models"),
+                                              align="center"),
+                                    
+                                    fluidPage(box(shinycssloaders::withSpinner(verbatimTextOutput("treeoutput")), title = h4(strong("Single Decision Tree")))),
+                                    fluidPage(box(shinycssloaders::withSpinner(verbatimTextOutput("rfoutput")), title = h4(strong("Random Forest"))),
+                                              box(h4(strong("Random Forest Variable Importance")), plotOutput("rf_imp"))),
+                                    fluidPage(box(shinycssloaders::withSpinner(verbatimTextOutput("bstoutput")), title = h4(strong("Boosted Tree"))),
+                                              box(fluidRow(box(("hello")),
+                                                           box(p("hello"))),
+                                                  fluidRow(box(("hello")),
+                                                           box(p("hello"))),
+                                                  fluidRow(box(("hello")),
+                                                           box(p("hello")))))         
+                                    ),  
                            tabPanel("Prediction", icon=icon("chart-pie"))
                     )
             ),

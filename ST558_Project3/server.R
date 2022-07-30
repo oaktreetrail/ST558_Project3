@@ -101,6 +101,76 @@ function(input, output, session){
         return(NULL)
       }
   })
-}
+  
+  # Fitting Models
+  index <- reactive({
+    createDataPartition(review.raw$sentiment, times = 1,
+                        p = input$p, list = FALSE)
+  })
+  
+  train_model <- reactive({review.raw[index(),]})
+  test_moedl <- reactive({review.raw[-index(),]})
+  
+  trian.svd_model <- reactive({
+    train.svd[index(),]
+  })
+  
+  cntrl <- reactive({
+    folds <- createMultiFolds(train_model()$sentiment, k = input$cv, times = 3)
+    cntrl <- trainControl(method = "repeatedcv", number = 10,
+                          repeats = 3, index = folds)
+    cntrl
+  })
+  
+  # 
+  # # Create data frame using our document semantic space of 50 features (i.e., the V matrix from our SVD).
+  # train.svd <- data.frame(Label = train$sentiment, train.irlba$v)
+  
+  
+  train_data <- reactive({
+    trian.svd_model()[, c(1, sample(2:51, input$nvar_model))]
+  })
+
+  # # Single decision trees
+  treemodel <- eventReactive(input$fitmodel, {
+    train(Label ~ ., data = train_data(), method = "rpart",
+            trControl = cntrl(), tuneLength = 7)
+  })
+
+  output$treeoutput <-  renderPrint({
+    treemodel()
+  })
+    
+  # Random Forest
+  rfmodel <- eventReactive(input$fitmodel, {
+    train(Label ~ ., data = train_data(), method = "rf",
+            trControl = cntrl(), tuneLength = 7)
+  })
+  
+  output$rfoutput <-  renderPrint({
+    rfmodel()
+  })
+  
+  output$rf_imp <- renderPlot({
+    plot(varImp(rfmodel()), top=10)
+  }) 
+  
+  
+  # Boosted Tree 
+  bstmodel <- eventReactive(input$fitmodel, {
+    train(Label ~ ., data = train_data(), method = "gbm",
+          trControl = cntrl(), 
+          preProcess = c("center", "scale"),
+          tuneGrid = expand.grid(n.trees = c(10, 50), interaction.depth = c(1:4),
+                                 shrinkage = c(0.001, 0.05), n.minobsinnode = c(5, 10)))
+  })
+  
+  output$bstoutput <-  renderPrint({
+    bstmodel()
+  })
   
 
+
+
+}
+  

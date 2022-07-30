@@ -69,7 +69,7 @@ review.raw$sentiment <- as.factor(review.raw$sentiment)
 
 # Create a 70%/ 30% stratified split
 indexes <- createDataPartition(review.raw$sentiment, times = 1,
-                               p = 0.7, list = FALSE)
+                               p = 1, list = FALSE)
 
 train <- review.raw[indexes,]
 test <- review.raw[-indexes,]
@@ -104,7 +104,7 @@ train.tokens.dfm <- dfm(train.tokens, tolower = FALSE)
 # Transform to a matrix and inspect.
 train.tokens.matrix <- as.matrix(train.tokens.dfm)
 
-# # First step, normalize all documents via TF.
+# First step, normalize all documents via TF.
 # train.tokens.df <- apply(train.tokens.matrix, 1, term.frequency)
 # 
 # # Second step, calculate the IDF vector that we will use - both
@@ -121,8 +121,8 @@ train.tokens.matrix <- as.matrix(train.tokens.dfm)
 # 
 # # Create data frame using our document semantic space of 50 features (i.e., the V matrix from our SVD).
 # train.svd <- data.frame(Label = train$sentiment, train.irlba$v)
-
-# Saving train.svd in RData format
+# 
+# # Saving train.svd in RData format
 # write.csv(train.svd, file = "svd.csv")
 
 # To load the data again
@@ -179,8 +179,47 @@ cv.cntrl <- trainControl(method = "repeatedcv", number = 10,
                          repeats = 3, index = cv.folds)
 
 # Single decision trees
-rpart.cv.1 <- train(Label ~ ., data = train.svd, method = "rpart", 
+rpart.cv <- train(Label ~ ., data = train.svd, method = "rpart", 
                     trControl = cv.cntrl, tuneLength = 7)
 
 # Check out our results.
-rpart.cv.1
+rpart.cv
+
+
+# Random Forest
+# start.time <- Sys.time()
+# rf.cv <- train(Label ~ ., data = train.svd, method = "rf", 
+#                  trControl = cv.cntrl, tuneLength = 7)
+# 
+# 
+# # Total time of execution on workstation was 
+# total.time <- Sys.time() - start.time
+# total.time
+# 
+# rf.cv
+# 
+# # Boosted Trees
+# 
+# # Values of n.trees
+# nTrees <- c(10, 50)
+# # Values of interaction.depth
+# intDepth <- c(1:4)
+# # Value of shrinkage
+# shrink <- c(0.001, 0.05)
+# # Value of n.minobsinnode
+# nodeMinN <- c(5, 10)
+# 
+# start.time <- Sys.time()
+# bst.cv <- train(Label ~ ., data = train.svd, method = "gbm", 
+#                trControl = cv.cntrl, 
+#                preProcess = c("center", "scale"),
+#                tuneGrid = expand.grid(n.trees = nTrees, interaction.depth = intDepth,
+#                                       shrinkage = shrink, n.minobsinnode = nodeMinN)
+#                )
+# 
+# 
+# # Total time of execution on workstation was 
+# total.time <- Sys.time() - start.time
+# total.time
+# 
+# bst.cv
