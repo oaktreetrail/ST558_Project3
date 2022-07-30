@@ -116,18 +116,29 @@ train.tokens.matrix <- as.matrix(train.tokens.dfm)
 # # Transpose the matrix
 # train.tokens.tfidf <- t(train.tokens.tfidf)
 # 
+# saveRDS(train.tokens.idf, "train.idf")
+
+train.tokens.idf <- readRDS("train.idf")
+# 
 # # Perform SVD. Specifically, reduce dimensionality down to 50 columns for our latent semantic analysis (LSA).
 # train.irlba <- irlba(t(train.tokens.tfidf), nv = 50, maxit = 100)
 # 
+# saveRDS(train.irlba, "train.irlba.rds")
+train.irlba <- readRDS("train.irlba.rds")
+# 
 # # Create data frame using our document semantic space of 50 features (i.e., the V matrix from our SVD).
-# train.svd <- data.frame(Label = train$sentiment, train.irlba$v)
+# train.svd <- data.frame(Label = as.factor(train$sentiment), train.irlba$v)
 # 
 # # Saving train.svd in RData format
 # write.csv(train.svd, file = "svd.csv")
 
+sigma.inverse <- 1 / train.irlba$d
+u.transpose <- t(train.irlba$u)
+
+
 # To load the data again
 train.svd <- read.csv("svd.csv")[-1]
-
+train.svd <- data.frame(Label = as.factor(train.svd$Label),train.svd[-1])
 #######
 # EDA #
 #######
@@ -179,27 +190,29 @@ cv.cntrl <- trainControl(method = "repeatedcv", number = 10,
                          repeats = 3, index = cv.folds)
 
 # Single decision trees
-rpart.cv <- train(Label ~ ., data = train.svd, method = "rpart", 
-                    trControl = cv.cntrl, tuneLength = 7)
+# rpart.cv <- train(Label ~ ., data = train.svd, method = "rpart", 
+#                     trControl = cv.cntrl, tuneLength = 7)
+# 
+# # Check out our results.
+# saveRDS(rpart.cv, file = "rpart.cv.rds")
 
-# Check out our results.
-rpart.cv
-
-
-# Random Forest
-# start.time <- Sys.time()
-# rf.cv <- train(Label ~ ., data = train.svd, method = "rf", 
+rpart.cv <- readRDS("rpart.cv.rds")
+# # Random Forest
+# # start.time <- Sys.time()
+# rf.cv <- train(Label ~ ., data = train.svd, method = "rf",
 #                  trControl = cv.cntrl, tuneLength = 7)
 # 
 # 
-# # Total time of execution on workstation was 
+# # Total time of execution on workstation was
 # total.time <- Sys.time() - start.time
 # total.time
 # 
-# rf.cv
-# 
-# # Boosted Trees
-# 
+# saveRDS(rf.cv, "rf.rds")
+
+rf.cv <- readRDS("rf.rds")
+# # 
+# # # Boosted Trees
+# # 
 # # Values of n.trees
 # nTrees <- c(10, 50)
 # # Values of interaction.depth
@@ -210,16 +223,20 @@ rpart.cv
 # nodeMinN <- c(5, 10)
 # 
 # start.time <- Sys.time()
-# bst.cv <- train(Label ~ ., data = train.svd, method = "gbm", 
-#                trControl = cv.cntrl, 
+# bst.cv <- train(Label ~ ., data = train.svd, method = "gbm",
+#                trControl = cv.cntrl,
 #                preProcess = c("center", "scale"),
 #                tuneGrid = expand.grid(n.trees = nTrees, interaction.depth = intDepth,
 #                                       shrinkage = shrink, n.minobsinnode = nodeMinN)
 #                )
 # 
 # 
-# # Total time of execution on workstation was 
+# # Total time of execution on workstation was
 # total.time <- Sys.time() - start.time
 # total.time
 # 
 # bst.cv
+# 
+# saveRDS(bst.cv, "bst.cv.rds")
+
+bst.cv <- readRDS("bst.cv.rds")

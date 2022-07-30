@@ -111,8 +111,13 @@ function(input, output, session){
   train_model <- reactive({review.raw[index(),]})
   test_moedl <- reactive({review.raw[-index(),]})
   
-  trian.svd_model <- reactive({
-    train.svd[index(),]
+  trian.svd_data <- reactive({
+    train <-train.svd[index(),]
+    train 
+  })
+  
+  test.svd_data <- reactive({
+    train.svd[-index(),]
   })
   
   cntrl <- reactive({
@@ -126,10 +131,18 @@ function(input, output, session){
   # # Create data frame using our document semantic space of 50 features (i.e., the V matrix from our SVD).
   # train.svd <- data.frame(Label = train$sentiment, train.irlba$v)
   
+  var_model <- reactive({
+    c(1, sample(2:51, input$nvar_model))
+  })
   
   train_data <- reactive({
-    trian.svd_model()[, c(1, sample(2:51, input$nvar_model))]
+    trian.svd_data()[, var_model()]
   })
+  
+  test_data <- reactive({
+    test.svd_data()[, var_model()]
+  })
+  
 
   # # Single decision trees
   treemodel <- eventReactive(input$fitmodel, {
@@ -152,7 +165,11 @@ function(input, output, session){
   })
   
   output$rf_imp <- renderPlot({
-    plot(varImp(rfmodel()), top=10)
+    if(input$fitmodel){
+      plot(varImp(rfmodel()), top=10)
+    }else{
+      return(NULL)
+    }
   }) 
   
   
@@ -169,8 +186,41 @@ function(input, output, session){
     bstmodel()
   })
   
+  # Comparison tab
+  output$rpart_conf <- renderPrint({confusionMatrix(predict(treemodel(), test_data()), test_data()$Label)[2:3]})
+  
+  output$rf_conf <- renderPrint({confusionMatrix(predict(rfmodel(), test_data()), test_data()$Label)[2:3]})
+  
+  output$bst_conf <- renderPrint({confusionMatrix(predict(bstmodel(), test_data()), test_data()$Label)[2:3]})
 
+  # Prediction tab
+  test.svd <- eventReactive(input$text,{
+    step1 <- tokens(input$text, what = "word", 
+                           remove_numbers = TRUE, remove_punct = TRUE,
+                           remove_symbols = TRUE, remove_hyphens = TRUE)
+    step2 <- tokens_tolower(step1)
+    step3 <- tokens_select(step2, stopwords(), 
+                           selection = "remove")
+    step4 <- tokens_wordstem(step3, language = "english")
+    step5 <- tokens_ngrams(step4, n = 1:2)
+    step6 <- dfm(step5)
+    step7 <- as.matrix(dfm_match(step6, featnames(train.tokens.dfm)))
+    test.tokens.df  <- apply(step7, 1, term.frequency)
+    test.tokens.tfidf <- apply(test.tokens.df, 2, tf.idf, idf = train.tokens.idf)
+    test.svd <- t(sigma.inverse * u.transpose %*% test.tokens.tfidf)
+    test.svd
+  })
+  
+  output$review_test <- renderText({
+    data_pred <- data.frame(Label = "positive", test.svd())
+    if(input$model_pred == "tree_pred"){
+      pred <- predict(rpart.cv, data_pred)
+    } else if(input$model_pred == "rf_pred"){
+      pred <- predict(rf.cv, data_pred)
+    } else{pred <- predict(bst.cv, data_pred)}
+    
+  })
 
 
 }
-  
+

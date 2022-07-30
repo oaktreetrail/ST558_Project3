@@ -188,14 +188,29 @@ dashboardPage(
                                     fluidPage(box(shinycssloaders::withSpinner(verbatimTextOutput("rfoutput")), title = h4(strong("Random Forest"))),
                                               box(h4(strong("Random Forest Variable Importance")), plotOutput("rf_imp"))),
                                     fluidPage(box(shinycssloaders::withSpinner(verbatimTextOutput("bstoutput")), title = h4(strong("Boosted Tree"))),
-                                              box(fluidRow(box(("hello")),
-                                                           box(p("hello"))),
-                                                  fluidRow(box(("hello")),
-                                                           box(p("hello"))),
-                                                  fluidRow(box(("hello")),
-                                                           box(p("hello")))))         
+                                              box(h3(strong("Model Comparasion on the Test Model")),
+                                                 fluidPage(fluidRow(h4(strong("Confusion Matrix of Single Decision Tree")), 
+                                                                    verbatimTextOutput("rpart_conf")
+                                                                   ),
+                                                          fluidRow(h4(strong("Confusion Matrix of Random Forest")),
+                                                                   verbatimTextOutput("rf_conf")
+                                                                  ),
+                                                          fluidRow(h4(strong("Confusion Matrix of Boosted Tree")), 
+                                                                   verbatimTextOutput("bst_conf")
+                                                                   )
+                                                          )))         
                                     ),  
-                           tabPanel("Prediction", icon=icon("chart-pie"))
+                           tabPanel("Prediction", icon=icon("chart-pie"),
+                                    fluidPage(textAreaInput(inputId = "text",
+                                                            label = "Enter review below:",
+                                                            value = "Good Movie"),
+                                              radioButtons(inputId = "model_pred",
+                                                           label = "Select the Model for prediction",
+                                                           c("Single Decision Tree" = "tree_pred",
+                                                             "Random Forest" = "rf_pred",
+                                                             "Boosted Tree" = "bst_pred"))
+                                              ),
+                                    fluidPage(h5(strong("1 means Positive, 2 means Negative")), verbatimTextOutput("review_test")))
                     )
             ),
       # # Dataset page ----
