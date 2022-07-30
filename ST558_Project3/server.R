@@ -219,8 +219,56 @@ function(input, output, session){
       pred <- predict(rf.cv, data_pred)
     } else{pred <- predict(bst.cv, data_pred)}
     
+    if(as.numeric(pred) == 1){print("Positive")
+    }else if(as.numeric(pred) == 2){
+        print("Negative")
+      }
   })
-
-
+  # Data set Page
+  
+  download <- reactive({
+    if (input$data_type_download == "raw_download" & input$sen_download == "full_download"){
+      data <- review.raw } else if (input$data_type_download == "raw_download" & input$sen_download == "pos_download"){
+        data <- review.raw[review.raw$sentiment == "positive", ]
+      } else if (input$data_type_download == "raw_download" & input$sen_download == "neg_download"){
+        data <- review.raw[review.raw$sentiment == "negative", ]
+      } else if (input$data_type_download == "token_download" & input$sen_download == "full_download"){
+        data <- token_down[, sample(2:111793, input$nvar_token_download)]
+      } else if (input$data_type_download == "token_download" & input$sen_download == "pos_download"){
+        data <- token_down[token_down$Label == "positive", sample(2:111793, input$nvar_token_download)]
+      }  else if (input$data_type_download == "token_download" & input$sen_download == "neg_download"){
+        data <- token_down[token_down$Label == "negative", sample(2:111793, input$nvar_token_download)]
+      }  else if (input$data_type_download == "svd_download" & input$sen_download == "pos_download"){
+        data <- train.svd[train.svd$Label == "positive", sample(2:51, input$nvar_svd_download)]
+      }  else if (input$data_type_download == "svd_download" & input$sen_download == "neg_download"){
+        data <- train.svd[train.svd$Label == "negative", sample(2:51, input$nvar_svd_download)]
+      }  else if (input$data_type_download == "svd_download" & input$sen_download == "full_download"){
+        data <- train.svd[, sample(2:51, input$nvar_svd_download)]
+      }
+  })
+  
+  output$finalTable <- renderDataTable({
+    download()
+  })
+  
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste0(input$data_type_download, input$sen_download, ".csv")
+    },
+    content = function(file) {
+      write.csv(download(), file)
+    }
+  )
 }
+
+  
+ 
+  # output$download_data <-downloadHandler(
+  #   filename <- function(){
+  #     paste0(input$showdata, ".csv")
+  #   },
+  #   content <- write.csv(download)
+  #   
+  #   
+  # ) 
 

@@ -34,33 +34,23 @@ dashboardPage(
                                 "Singular Vaule Decomposition Data" = "svd"))
                                 ),
                 
-                # conditionalPanel(
-                #   'input.sidebarid == "eda" && input.data_type == "svd"',
-                #   sliderInput(inputId = "ncol",
-                #               label = "Select the number of variables of the SVD data",
-                #               value = 5,
-                #               min  = 2,
-                #               max = 10)
-                #                 ),
-                
-                # conditionalPanel(
-                #   'input.sidebarid == "eda" && input.data_type == "raw"',
-                #   radioButtons(inputId = "sum_type" ,
-                #                label = "Summary Type",
-                #                selected = NULL,
-                #                c("Numeric Summary" = "num",
-                #                  "Graphical Summary" = "plot"))
-                # ),
-                # conditionalPanel(
-                #   'input.sidebarid == "eda" && input.data_type == "svd"',
-                #   checkboxGroupInput(inputId = "sen_type" ,
-                #                      label = "Sentiment Type",
-                #                      selected = "pos",
-                #                      c("Positive" = "pos",
-                #                        "Negative" = "neg"))
-                # ),
                 menuItem("Modeling", tabName = "model", icon = icon("chart-line")),
-                menuItem("Dataset", tabName = "data", icon = icon("database"))
+                menuItem("Dataset", tabName = "data", icon = icon("database")
+                         ),
+                conditionalPanel('input.sidebarid == "data"',
+                                 radioButtons(inputId = "data_type_download" ,
+                                              label = "Data Type",
+                                              selected = NULL,
+                                              c("Raw Review Data" = "raw_download",
+                                                "Token Data" = "token_download", 
+                                                "Singular Vaule Decomposition Data" = "svd_download")),
+                                 radioButtons(inputId = "sen_download",
+                                             label = "Positive or Negative Review",
+                                             selected = "pos_download",
+                                             c("Postive Dataset" = "pos_download",
+                                               "Negative Dataset" = "neg_download",
+                                               "Full Dataset" = "full_download"))
+                                 )
     )
   ),
 
@@ -210,15 +200,32 @@ dashboardPage(
                                                              "Random Forest" = "rf_pred",
                                                              "Boosted Tree" = "bst_pred"))
                                               ),
-                                    fluidPage(h5(strong("1 means Positive, 2 means Negative")), verbatimTextOutput("review_test")))
+                                    fluidPage(h5(strong("Prediction")), verbatimTextOutput("review_test")))
                     )
             ),
       # # Dataset page ----
             tabItem(tabName = "data",
-                    tabBox(id ="t2", width = 12,
-                           tabPanel("Data", dataTableOutput("dataT"), icon = icon("table")),
-                           tabPanel("Structure", verbatimTextOutput("structure"), icon=icon("uncharted"))
-                    )
+                    fluidPage(downloadButton("downloadData", "Download")),
+                    br(),
+                    br(),
+                    fluidPage(conditionalPanel("input.data_type_download == 'token_download'",
+                                                sliderInput(inputId = "nvar_token_download",
+                                                           label = "Select the Numbers of Variables in Token Data",
+                                                           value = 500,
+                                                           min = 100,
+                                                           max = 1000,
+                                                           step = 50)),
+                              conditionalPanel("input.data_type_download == 'svd_download'",
+                                               sliderInput(inputId = "nvar_svd_download",
+                                                           label = "Select the Numbers of Variables in SVD Data",
+                                                           value = 30,
+                                                           min = 10,
+                                                           max = 50,
+                                                           step = 5)),
+                              dataTableOutput("finalTable")
+                              
+                      )
+                    
             )
     )
   )

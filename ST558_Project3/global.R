@@ -139,6 +139,8 @@ u.transpose <- t(train.irlba$u)
 # To load the data again
 train.svd <- read.csv("svd.csv")[-1]
 train.svd <- data.frame(Label = as.factor(train.svd$Label),train.svd[-1])
+
+token_down <- data.frame(Label = as.factor(train.svd$Label),train.tokens.matrix)
 #######
 # EDA #
 #######
