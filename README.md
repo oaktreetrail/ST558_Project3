@@ -35,5 +35,5 @@ install.packages(c("caret", "corrplot", "DT", "doSNOW", "ggtext", "irlba", "lsa"
   "SnowballC", "stringr", "syuzhet", "textdata", "tidytext", "tidyverse", "tm",
   "wordcloud", "xlsx"))
   
-### The Code to Share the App on GitHub
+### Copy and Paste this Code to Run the App on GitHub
 shiny::runGitHub(repo = "ST558_Project3", username = "oaktreetrail", ref = "main")
