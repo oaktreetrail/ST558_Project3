@@ -77,6 +77,15 @@ function(input, output, session){
     }
   })
   
+  # Modeling page
+  output$gini <- renderUI({
+    withMathJax(helpText(
+      "$${Gini Index}= 1-\\sum_{i = 1}^{n}({P}_i)^2$$"
+    ))
+  })
+  
+  #\\sum_\\{i = 1}^{n} 
+  
   output$plotgraph1 <- renderPlot({plot2()})
   output$plotgraph2 <- renderPlot({plot3()})
   
