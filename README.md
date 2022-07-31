@@ -21,12 +21,12 @@ Create a nice looking shiny app that can be used to explore data and model it
 - library(SnowballC): to parallel processing, particularly when we get to the random forest model and boosted model since they are computationally expensive.
 - library(stringr):  provide a cohesive set of functions designed to make working with strings as easy as possible
 - library(syuzhet): Extracts Sentiment and Sentiment-Derived Plot Arcs from Text
-- library(textdata)
-- library(tidytext)
+- library(textdata): to provide access to text-related data sets 
+- library(tidytext): to allow conversion of text to and from tidy formats
 - library(tidyverse): for data cleaning and transforming with dplyr, and plotting with ggplot2.
-- library(tm)
-- library(wordcloud)
-- library(xlsx)      
+- library(tm): Text Mining Package
+- library(wordcloud):  to build wordclouds in R
+- library(xlsx): to read and write xlsx files       
 
 
 ### The Code to Install All the Packcages
