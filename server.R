@@ -256,6 +256,7 @@ function(input, output, session){
       }
   })
   
+  
   output$finalTable <- renderDataTable({
     download()
   })

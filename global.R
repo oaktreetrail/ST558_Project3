@@ -29,7 +29,7 @@ registerDoSNOW(cl)
 ################
 
 # Read in the data set
-# setwd("F:\\Graduate\\NCSU_courses\\ST558\\projects\\project_3\\ST558_Project3\\ST558_Project3")
+setwd("F:\\Graduate\\NCSU_courses\\ST558\\projects\\project_3\\ST558_Project3\\ST558_Project3")
 review.raw <- read.csv("IMDB Dataset.csv", nrows = 1000, stringsAsFactors = FALSE)
 
 ########################
@@ -204,6 +204,7 @@ rpart.cv <- readRDS("rpart.cv.rds")
 # rf.cv <- train(Label ~ ., data = train.svd, method = "rf",
 #                  trControl = cv.cntrl, tuneLength = 7)
 # 
+
 # 
 # # Total time of execution on workstation was
 # total.time <- Sys.time() - start.time
