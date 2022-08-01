@@ -224,6 +224,9 @@ dashboardPage(
                                               align="center"),
                                     
                                     fluidPage(box(shinycssloaders::withSpinner(verbatimTextOutput("treeoutput")), title = h4(strong("Single Decision Tree")))),
+                                    
+                                    fluidPage(box(shinycssloaders::withSpinner(verbatimTextOutput("logoutput")), title = h4(strong("Logistic Regression")))),
+                                    
                                     fluidPage(box(shinycssloaders::withSpinner(verbatimTextOutput("rfoutput")), title = h4(strong("Random Forest"))),
                                               box(h4(strong("Random Forest Variable Importance")), plotOutput("rf_imp"))),
                                     fluidPage(box(shinycssloaders::withSpinner(verbatimTextOutput("bstoutput")), title = h4(strong("Boosted Tree"))),
@@ -231,6 +234,10 @@ dashboardPage(
                                                  fluidPage(fluidRow(h4(strong("Confusion Matrix of Single Decision Tree")), 
                                                                     verbatimTextOutput("rpart_conf")
                                                                    ),
+                                                           fluidRow(h4(strong("Confusion Matrix of Logistic Regression")),
+                                                                    verbatimTextOutput("log_conf")
+                                                           ),
+                                                           
                                                           fluidRow(h4(strong("Confusion Matrix of Random Forest")),
                                                                    verbatimTextOutput("rf_conf")
                                                                   ),
@@ -246,6 +253,7 @@ dashboardPage(
                                               radioButtons(inputId = "model_pred",
                                                            label = "Select the Model for prediction",
                                                            c("Single Decision Tree" = "tree_pred",
+                                                             "Logistic Regresion" ="log_pred", 
                                                              "Random Forest" = "rf_pred",
                                                              "Boosted Tree" = "bst_pred"))
                                               ),

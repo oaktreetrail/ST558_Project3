@@ -199,11 +199,27 @@ cv.cntrl <- trainControl(method = "repeatedcv", number = 10,
 # saveRDS(rpart.cv, file = "rpart.cv.rds")
 
 rpart.cv <- readRDS("rpart.cv.rds")
+
+# Logistic regression
+log.cv <- train(Label ~ ., data = train.svd, 
+                  method="glm", family="binomial",
+                  trControl = cv.cntrl)
+ 
+
+
+
+
 # # Random Forest
 # # start.time <- Sys.time()
 # rf.cv <- train(Label ~ ., data = train.svd, method = "rf",
 #                  trControl = cv.cntrl, tuneLength = 7)
 # 
+
+# rpart.cv <- train(Label ~ ., data = train.svd, method = "rpart", 
+#                     trControl = cv.cntrl, tuneLength = 7)
+
+
+
 
 # 
 # # Total time of execution on workstation was

@@ -162,6 +162,18 @@ function(input, output, session){
   output$treeoutput <-  renderPrint({
     treemodel()
   })
+  
+  # # Logistic regression
+  logmodel <- eventReactive(input$fitmodel, {
+    train(Label ~ ., data = train_data(), 
+          method="glm", family="binomial", 
+          trControl = cntrl())
+  })
+  
+  output$logoutput <-  renderPrint({
+    logmodel()
+  })
+  
     
   # Random Forest
   rfmodel <- eventReactive(input$fitmodel, {
@@ -198,6 +210,8 @@ function(input, output, session){
   # Comparison tab
   output$rpart_conf <- renderPrint({confusionMatrix(predict(treemodel(), test_data()), test_data()$Label)[2:3]})
   
+  output$log_conf <- renderPrint({confusionMatrix(predict(logmodel(), test_data()), test_data()$Label)[2:3]})
+  
   output$rf_conf <- renderPrint({confusionMatrix(predict(rfmodel(), test_data()), test_data()$Label)[2:3]})
   
   output$bst_conf <- renderPrint({confusionMatrix(predict(bstmodel(), test_data()), test_data()$Label)[2:3]})
@@ -224,6 +238,8 @@ function(input, output, session){
     data_pred <- data.frame(Label = "positive", test.svd())
     if(input$model_pred == "tree_pred"){
       pred <- predict(rpart.cv, data_pred)
+    } else if(input$model_pred == "log_pred"){
+      pred <- predict(log.cv, data_pred)
     } else if(input$model_pred == "rf_pred"){
       pred <- predict(rf.cv, data_pred)
     } else{pred <- predict(bst.cv, data_pred)}
