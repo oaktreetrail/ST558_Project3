@@ -29,7 +29,7 @@ registerDoSNOW(cl)
 ################
 
 # Read in the data set
-setwd("F:\\Graduate\\NCSU_courses\\ST558\\projects\\project_3\\ST558_Project3\\ST558_Project3")
+# setwd("F:\\Graduate\\NCSU_courses\\ST558\\projects\\project_3\\ST558_Project3\\ST558_Project3")
 review.raw <- read.csv("IMDB Dataset.csv", nrows = 1000, stringsAsFactors = FALSE)
 
 ########################
